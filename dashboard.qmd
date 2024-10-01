@@ -1,0 +1,462 @@
+---
+title: "dashboard"
+format: 
+  dashboard:
+    scrolling: true
+    theme: sketchy
+---
+
+# Website Analytics{scrolling="true"}
+
+**Data Science For Open Wash Data Website Analytics**
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(ggplot2)
+library(ggthemes)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(jsonlite)
+library(showtext)
+
+```
+
+```{r, include=FALSE}
+# Load data
+load("/Users/ydubey/Desktop/plausible_pkg/plausible/data/ds4owd/timeseries.rda")
+load("/Users/ydubey/Desktop/plausible_pkg/plausible/data/ds4owd/country.rda")
+load("/Users/ydubey/Desktop/plausible_pkg/plausible/data/ds4owd/source.rda")
+stats <- read_csv("/Users/ydubey/Desktop/plausible_pkg/plausible/data/dashboard/website_stats.csv")
+# Move timeseries data to this folder for access in OJS
+write.csv(ds4owd_timeseries, "ds4owd_timeseries.csv", row.names = FALSE)
+```
+
+## Overview
+
+```{r}
+#| content: valuebox
+#| title : "Total Unique Visitors"
+list(
+  icon = "people",
+  color = "primary",
+  value = stats$tot_unique_visitors
+)
+```
+
+```{r}
+#| content: valuebox
+#| title : "Total Page Views"
+list(
+  icon = "eye",
+  color = "primary",
+  value = stats$tot_pageviews
+)
+```
+
+```{r}
+#| content: valuebox
+#| title : "Total Visits"
+list(
+  icon = "activity",
+  color = "primary",
+  value = stats$tot_visits
+)
+```
+
+```{r}
+#| content: valuebox
+#| title : "Visit Duration (mins)"
+list(
+  icon = "clock",
+  color = "primary",
+  value = stats$mean_minutes
+)
+
+```
+
+```{r}
+#| content: valuebox
+#| title : "Bounce Rate (%)"
+list(
+  icon = "arrow-up-right",
+  color = "primary",
+  value = stats$bounce
+)
+```
+
+## Website Activity
+
+```{r}
+#| fig-width: 5 
+#| fig-height: 2
+#| title: "Daily Visits"
+timeseries_plot <- ggplot(data = ds4owd_timeseries, aes(x = date, y = visits)) +
+  geom_line() +  
+  theme_minimal() + 
+  labs(title = "", x="", y="") +
+  ylim(0, max(ds4owd_timeseries$visits+50))
+# Convert to a plotly object
+ggplotly(timeseries_plot)
+```
+
+```{r}
+#| title: "Top 10 Sources"
+sources_table <- ds4owd_source %>% 
+  arrange(desc(visits)) %>% 
+  head(10) %>% 
+  select(source, visits) %>% 
+  rename("Source" = source, "Visits" = visits) %>% 
+  knitr::kable()
+sources_table
+```
+
+## Visits by Country
+
+```{r}
+#| fig-width: 14
+#| fig-height: 10
+#| title: "Worldwide Visits"
+# Take country and visitors columns
+ds4owd_country_vists <- ds4owd_country %>% select(country, visits)
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Add visits column to world data. Set to 0 if no data available in ds4owd_country
+world_data <- world %>%
+  mutate(visits = ifelse(is.na(ds4owd_country_vists$visits[match(iso_a2, ds4owd_country$country)]), 0, ds4owd_country_vists$visits[match(iso_a2, ds4owd_country$country)]))
+
+# Set 0 values to NA
+world_data$visits[world_data$visits == 0] <- NA
+
+# Create the plot using ggplot
+country_plot <- ggplot(world_data) +
+  geom_sf(aes(fill = visits)) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "",
+       fill = "Visits") +
+  theme_minimal() + 
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+
+ggplotly(country_plot)
+```
+
+# Course Surveys{scrolling="true"}
+
+**Data Science For Open Wash Data Course Survey**
+
+```{r}
+# Load data
+load("/Users/ydubey/Desktop/post_survey_pkg/postsurvey/data/postsurvey.rda")
+load("/Users/ydubey/Desktop/reg_data_pkg/regdata/data/presurvey.rda")
+load("/Users/ydubey/Desktop/reg_data_pkg/regdata/data/locations.rda")
+```
+
+
+```{r}
+presurvey <- presurvey %>% mutate(prog_exp_r_num = case_when(
+  prog_exp_r == "I have none." ~ 1,
+  prog_exp_r == "I have written a few lines now and again." ~ 2,
+  prog_exp_r == "I have written programs for my own use that are a couple of pages long." ~ 3,
+  prog_exp_r == "I have written and maintained larger pieces of software." ~ 4
+  )
+)
+
+avg_pre_r_comp <- mean(as.integer(presurvey$prog_exp_r_num), na.rm = TRUE)
+```
+
+
+## Locations 
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+#| title: "Where do Participants Come From?"
+countries <- locations %>% select(iso_country) %>% 
+  group_by(iso_country) %>% 
+  summarise(participants = n())
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Add visits column to world data. Set to 0 if no data available in countries
+world_data <- world %>%
+  mutate(participants = ifelse(is.na(countries$participants[match(adm0_iso, countries$iso_country)]), 0, countries$participants[match(adm0_iso, countries$iso_country)]))
+
+# Set 0 values to NA
+world_data$participants[world_data$participants == 0] <- NA
+
+# Create the plot using ggplot
+country_plot <- ggplot(world_data) +
+  geom_sf(aes(fill = participants)) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "",
+       fill = "Participants") +
+  theme_minimal() + 
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+
+ggplotly(country_plot)
+```
+
+## Overview Text
+What do they think of the course?
+
+## Overview
+
+```{r}
+# Completion Rate
+completion_rate <- postsurvey %>% filter(course_completion  %in% c(7,8,9,10)) %>% nrow() / nrow(postsurvey) * 100
+
+# Overall average rating for the course
+avg_course_rating <- mean(as.integer(postsurvey$rating_overall), na.rm = TRUE)
+
+# Calculate participants where course met or exceeded expectations
+exceeded_expectations <- postsurvey %>%
+  filter(expectations %in% c("Yes, it exceeded my expectations", "Yes, it met my expectations")) %>%
+  nrow() / nrow(postsurvey) * 100
+
+# Rating for the structure of the course
+avg_structure_rating <- mean(as.integer(postsurvey$rating_structure), na.rm = TRUE)
+
+# Average instructor competency rating
+avg_ins_rating_comp <- mean(as.integer(postsurvey$rating_ins_comp), na.rm = TRUE)
+
+# Average competency rating for r and version control
+avg_r_comp <- mean(as.integer(postsurvey$rating_self_r_comp), na.rm = TRUE)
+avg_vc_comp <- mean(as.integer(postsurvey$rating_self_vc_comp), na.rm = TRUE)
+avg_conf_skill <- mean(as.integer(postsurvey$conf_skill_app), na.rm = TRUE)
+
+
+# Cases where learning objectives were achieved
+learning_objectives_achieved <- postsurvey %>%
+  filter(learning_objectives %in% c("Yes")) %>%
+  nrow() / nrow(postsurvey) * 100
+```
+
+```{r}
+#| content: valuebox
+#| title : "Completion Rate"
+list(
+  icon = "bookmark-check",
+  color = "success",
+  value = paste0(completion_rate,"%")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title : "Overall Course Rating"
+
+list(
+  icon = "star-fill",
+  color = "success",
+  value = paste0(avg_course_rating," / 4")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Instructor Rating"
+list(
+  icon = "star-fill",
+  color = "success",
+  value = paste0(avg_ins_rating_comp, " / 4")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Course Structure Rating"
+list(
+  icon = "star-fill",
+  color = "success",
+  value = paste0(avg_structure_rating, " / 4")
+)
+```
+
+## Expectations - Title 
+
+How did Participants Benefit?
+
+## Expectations
+
+
+
+```{r}
+expectations <- postsurvey %>% 
+  select(expectations) %>%
+  # change the values to No, Yes, Exceeded Expectations 
+  mutate(expectations = case_when(
+    expectations == "Yes, it met my expectations" ~ "Met Expectations",
+    expectations == "Yes, it exceeded my expectations" ~ "Exceeded Expectations",
+    TRUE ~ "Did not meet Expectations"
+  ))
+# Table of each expectation value and its count 
+expectations_table <- expectations %>% 
+  group_by(expectations) %>% 
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+### Column - Expectations{width=37.5%}
+
+```{r}
+#| fig-width: 5
+#| fig-height: 3
+#| cap-location: "top"
+#| title: "Did the course meet expectations?"
+
+# Create a bar plot of the expectations
+expectation_plot <- ggplot(expectations_table, aes(x = reorder(expectations, count, decreasing=TRUE), y = count)) +
+  geom_bar(stat = "identity", fill="white", color="black") +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) + 
+  ylim(0,max(expectations_table$count) + 3)
+
+# Convert to an interactive plot
+expectation_plot
+```
+
+### Column - Skill Evolution{width=37.5%}
+
+
+```{r}
+#| fig-width: 5
+#| fig-height: 3
+#| cap-location: "top"
+#| title: "How did R programming skills evolve?" 
+
+# Line plot with two dots that goes from average pre-survey r competency to post rurvey r competency
+r_comp_plot <- ggplot() +
+  geom_point(aes(x = 1, y = avg_pre_r_comp), color = "blue", size = 3) +
+  geom_point(aes(x = 2, y = avg_r_comp), color = "red", size = 3) +
+  geom_line(aes(x = c(1, 2), y = c(avg_pre_r_comp, avg_r_comp)), color = "black") +
+  geom_segment(aes(x = 1.5, xend = 1.5, y = 1, yend = 4), linetype = "dashed", color = "gray") + 
+  geom_text(aes(x = 1, y = avg_pre_r_comp, label = round(avg_pre_r_comp, 1)), 
+            vjust = -1, color = "blue") +  # Label for before
+  geom_text(aes(x = 2, y = avg_r_comp, label = round(avg_r_comp, 1)), 
+            vjust = -1, color = "red") +  # Label for after
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        panel.grid = element_blank()) + 
+  ylim(1, 4)
+
+r_comp_plot
+```
+
+### Column - Skill ratings{width=25%}
+
+How did they feel after the course?
+
+```{r}
+#| content: valuebox
+#| title: "Confidence in R skills"
+
+list(
+  icon = "arrow-up-right-circle-fill",
+  color = "info",
+  value = paste0(avg_r_comp, " / 4")
+)
+```
+
+
+```{r}
+#| content: valuebox
+#| title: "Confidence in Version Control"
+
+list(
+  icon = "arrow-up-right-circle-fill",
+  color = "info",
+  value = paste0(avg_vc_comp, " / 4")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Confidence in Applying Skills"
+list(
+  icon = "arrow-up-right-circle-fill",
+  color = "info",
+  value = paste0(avg_conf_skill, " / 4")
+)
+```
+# Posit Cloud{scrolling="true"}
+
+```{r}
+load("/Users/ydubey/Desktop/Posit package/positcloud/data/positcloud.rda")
+```
+
+```{r}
+# Daily Compute Usage
+positcloud_daily <- positcloud %>% 
+  filter(active_projects > 0) %>%
+  group_by (from) %>% 
+  summarise(mean_compute = mean(compute, na.rm = TRUE))
+positcloud_daily$from <- as.Date(positcloud_daily$from)
+```
+
+As a part of the course, learners were introduced to Posit cloud to encourage open data sharing practices and provide a platform for sharing their work. 
+
+## Overview
+
+```{r}
+#| content: valuebox
+#| title : "Total Active Users"
+list(
+  icon = "people",
+  color = "primary",
+  value = unique(positcloud$user_id) %>% length()
+)
+```
+
+
+```{r}
+#| content: valuebox
+#| title : "Total Active Projects"
+list(
+  icon = "activity",
+  color = "primary",
+  value = positcloud %>% group_by(user_id) %>% 
+    summarize(act_project = max(active_projects)) %>% 
+    select(act_project) %>%
+    sum()
+  )
+
+```
+
+```{r}
+#| content: valuebox
+#| title : "Total Compute Hours Logged"
+list(
+  icon = "clock",
+  color = "primary",
+  value = round(sum(positcloud$compute),0)
+)
+```
+
+
+## Daily Usage Plot 
+
+```{r}
+#| fig-width: 5
+#| fig-height: 3
+#| title: "Daily Posit Cloud Compute Usage (Hours)"
+#| cap-location: "top"
+
+positcloud_plot <- ggplot(positcloud_daily, aes(x = from, y = mean_compute, group=1)) +
+  geom_line() +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) + 
+  ylim(0, max(positcloud_daily$mean_compute)+1) + 
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "3 months")
+ggplotly(positcloud_plot)
+```
