@@ -19,18 +19,66 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(jsonlite)
 library(showtext)
-
+library(RPostgres)
 ```
 
-```{r, include=FALSE}
-# Load data
-load("/Users/ydubey/Desktop/plausible_pkg/plausible/data/ds4owd/timeseries.rda")
-load("/Users/ydubey/Desktop/plausible_pkg/plausible/data/ds4owd/country.rda")
-load("/Users/ydubey/Desktop/plausible_pkg/plausible/data/ds4owd/source.rda")
-stats <- read_csv("/Users/ydubey/Desktop/plausible_pkg/plausible/data/dashboard/website_stats.csv")
-# Move timeseries data to this folder for access in OJS
-write.csv(ds4owd_timeseries, "ds4owd_timeseries.csv", row.names = FALSE)
+```{r}
+HOST = "id-hdb-psgr-ct39.ethz.ch"
+PORT = 5432
+DBNAME = "openwashdata"
+user = ""
+password = ""
+con <- dbConnect(Postgres(), host = HOST, port = PORT, dbname = DBNAME, user = user, password = password)
+# Load datasets
+ds4owd_timeseries <- dbFetch(dbSendQuery(con, 'SELECT * FROM "ds4owd-001_timeseries_data";'))
+ds4owd_country <-  dbFetch(dbSendQuery(con, 'SELECT * FROM "ds4owd-001_country_data";'))
+ds4owd_source <-  dbFetch(dbSendQuery(con, 'SELECT * FROM "ds4owd-001_source_data";'))
+postsurvey <- dbFetch(dbSendQuery(con, "SELECT * FROM postsurvey;"))
+presurvey <- dbFetch(dbSendQuery(con, "SELECT * FROM presurvey;"))
+locations <- dbFetch(dbSendQuery(con, "SELECT * FROM locations;"))
 ```
+
+```{r}
+calculate_descriptive_stats <- function(data) {
+  data <- data %>% filter(visit_duration != 0)
+  total_unique_visitors <- as.integer(sum(data$visitors, na.rm = TRUE))
+  total_pageviews <- as.integer(sum(data$pageviews, na.rm = TRUE))
+  total_visits <- as.integer(sum(data$visits, na.rm = TRUE))
+  mean_visit_duration <- mean(data$visit_duration, na.rm = TRUE) / 60
+  bounce_rate <- mean(data$bounce, na.rm = TRUE)
+
+  data.frame(
+    Metric = c("tot_unique_visitors", "tot_pageviews", "tot_visits", "mean_minutes", "bounce"),
+    Value = c(round(total_unique_visitors, 0), round(total_pageviews, 0), round(total_visits, 0), round(mean_visit_duration, 2), round(bounce_rate, 2))
+  ) %>% pivot_wider(names_from = Metric, values_from = Value)
+}
+
+group_data <- function(data, group_by) {
+  if (group_by == "Week") {
+    data %>%
+      mutate(week = floor_date(date, unit = "week")) %>%
+      group_by(week) %>%
+      summarize(visitors = sum(visitors), .groups = 'drop') %>%
+      rename(date = week)
+  } else if (group_by == "Month") {
+    data %>%
+      mutate(month = floor_date(date, unit = "month")) %>%
+      group_by(month) %>%
+      summarize(visitors = sum(visitors), .groups = 'drop') %>%
+      rename(date = month)
+  } else {
+    data
+  }
+}
+
+group_by <- "Day"  # Change this to "Day" or "Month" as needed
+
+# Group the data based on user input
+grouped_data <- group_data(ds4owd_timeseries, "Day")
+
+stats <- calculate_descriptive_stats(ds4owd_timeseries)
+```
+
 
 ## Overview
 
@@ -91,12 +139,15 @@ list(
 #| fig-width: 5 
 #| fig-height: 2
 #| title: "Daily Visits"
+ds4owd_timeseries$date <- as.Date(ds4owd_timeseries$date)
 timeseries_plot <- ggplot(data = ds4owd_timeseries, aes(x = date, y = visits)) +
   geom_line() +  
   theme_minimal() + 
-  labs(title = "", x="", y="") +
-  ylim(0, max(ds4owd_timeseries$visits+50))
-# Convert to a plotly object
+  labs(title = "Daily Visits", x="Date", y="Visits") +
+  ylim(0, max(ds4owd_timeseries$visits + 50)) +
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y")  # Tick every 3 months, formatted as "Month Year"
+
+# Convert to a plotly object for interactivity
 ggplotly(timeseries_plot)
 ```
 
@@ -148,12 +199,6 @@ ggplotly(country_plot)
 
 **Data Science For Open Wash Data Course Survey**
 
-```{r}
-# Load data
-load("/Users/ydubey/Desktop/post_survey_pkg/postsurvey/data/postsurvey.rda")
-load("/Users/ydubey/Desktop/reg_data_pkg/regdata/data/presurvey.rda")
-load("/Users/ydubey/Desktop/reg_data_pkg/regdata/data/locations.rda")
-```
 
 
 ```{r}
