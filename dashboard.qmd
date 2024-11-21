@@ -4,6 +4,8 @@ format:
   dashboard:
     scrolling: true
     theme: sketchy
+website:
+  output-dir: docs
 ---
 
 # Website Analytics{scrolling="true"}
@@ -26,8 +28,8 @@ library(RPostgres)
 HOST = "id-hdb-psgr-ct39.ethz.ch"
 PORT = 5432
 DBNAME = "openwashdata"
-user = ""
-password = ""
+user = "admin"
+password = "pleasechangeit"
 con <- dbConnect(Postgres(), host = HOST, port = PORT, dbname = DBNAME, user = user, password = password)
 # Load datasets
 ds4owd_timeseries <- dbFetch(dbSendQuery(con, 'SELECT * FROM "ds4owd-001_timeseries_data";'))
@@ -36,6 +38,7 @@ ds4owd_source <-  dbFetch(dbSendQuery(con, 'SELECT * FROM "ds4owd-001_source_dat
 postsurvey <- dbFetch(dbSendQuery(con, "SELECT * FROM postsurvey;"))
 presurvey <- dbFetch(dbSendQuery(con, "SELECT * FROM presurvey;"))
 locations <- dbFetch(dbSendQuery(con, "SELECT * FROM locations;"))
+positcloud <- dbFetch(dbSendQuery(con, 'SELECT * FROM "pscloud";'))
 ```
 
 ```{r}
@@ -434,10 +437,6 @@ list(
 )
 ```
 # Posit Cloud{scrolling="true"}
-
-```{r}
-load("/Users/ydubey/Desktop/Posit package/positcloud/data/positcloud.rda")
-```
 
 ```{r}
 # Daily Compute Usage

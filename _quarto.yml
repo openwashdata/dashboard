@@ -1,5 +1,9 @@
 project:
-  title: "dashboard"
+  type: website
+  output-dir: docs
 
+format:
+  dashboard:
+    theme: sketchy
 editor: visual
 
