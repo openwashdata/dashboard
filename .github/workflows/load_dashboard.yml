@@ -7,7 +7,7 @@ on:
 
 jobs:
   render-dashboard:
-    runs-on: self-hosted  # Use the self-hosted runner
+    runs-on: self-hosted  # Use your self-hosted runner
 
     steps:
       - name: Checkout repository
@@ -31,18 +31,9 @@ jobs:
           echo "DB_NAME: $DB_NAME"
           echo "DB_USER: $DB_USER"
 
-      - name: Install system dependencies
+      - name: Install system dependencies (macOS)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libudunits2-dev \
-            libproj-dev \
-            libgeos-dev \
-            libcurl4-openssl-dev \
-            libxml2-dev \
-            libssl-dev \
-            tesseract-ocr \
-            libgdal-dev  # Add GDAL dependency
+          brew install libgdal libxml2 libcurl tesseract libproj geos
 
       - name: Install Quarto
         uses: quarto-dev/quarto-actions/setup@v2
