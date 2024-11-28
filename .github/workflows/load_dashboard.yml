@@ -33,7 +33,7 @@ jobs:
 
       - name: Install system dependencies (macOS)
         run: |
-          brew install libgdal libxml2 libcurl tesseract libproj geos
+          brew install gdal libxml2 libcurl tesseract libproj geos
 
       - name: Install Quarto
         uses: quarto-dev/quarto-actions/setup@v2
