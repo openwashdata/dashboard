@@ -19,10 +19,10 @@ jobs:
       - name: Install Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Install R Dependencies
+      - name: Install renv and restore environment
         run: |
-          Rscript -e 'install.packages(c("DBI", "RPostgres", "rmarkdown", "knitr", "plotly", "showtext", "rnaturalearth", "rnaturalearthdata", "jsonlite", "ggthemes"))'
-          Rscript -e 'install.packages("tidyverse", repos="https://cloud.r-project.org/")'
+          Rscript -e 'install.packages("renv")'
+          Rscript -e 'renv::restore()'
 
       - name: Render Quarto Dashboard
         env:
