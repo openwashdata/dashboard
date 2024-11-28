@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  render-dashboard:
-    runs-on: self-hosted  # Use your self-hosted runner
+  render-and-deploy:
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
@@ -24,17 +24,10 @@ jobs:
           echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
 
-      - name: Debug
+      - name: Install system dependencies
         run: |
-          echo "DB_HOST: $DB_HOST"
-          echo "DB_PORT: $DB_PORT"
-          echo "DB_NAME: $DB_NAME"
-          echo "DB_USER: $DB_USER"
+          brew install gdal libxml2 tesseract geos
 
-      - name: Install system dependencies (macOS)
-        run: |
-          brew install gdal libxml2 curl tesseract proj geos
-          
       - name: Install Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
@@ -52,3 +45,9 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           quarto render dashboard.qmd
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs  # Adjust if your output folder is different
