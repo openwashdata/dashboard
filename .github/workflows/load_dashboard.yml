@@ -21,7 +21,7 @@ jobs:
 
       - name: Install R Dependencies
         run: |
-          Rscript -e 'install.packages(c("DBI", "RPostgres"))'
+          Rscript -e 'install.packages(c("DBI", "RPostgres", "rmarkdown", "knitr"))'
 
       - name: Render Quarto Dashboard
         env:
