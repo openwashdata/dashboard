@@ -21,7 +21,8 @@ jobs:
 
       - name: Install R Dependencies
         run: |
-          Rscript -e 'install.packages(c("DBI", "RPostgres", "rmarkdown", "knitr","tidyverse","ggplot2", "showtext", "rnaturanearth", "rnaturalearthdata", "plotly", "jsonlite", "ggthemes" ))'
+          Rscript -e 'install.packages(c("DBI", "RPostgres", "rmarkdown", "knitr", "plotly", "showtext", "rnaturalearth", "rnaturalearthdata", "jsonlite", "ggthemes"))'
+          Rscript -e 'install.packages("tidyverse", repos="https://cloud.r-project.org/")'
 
       - name: Render Quarto Dashboard
         env:
