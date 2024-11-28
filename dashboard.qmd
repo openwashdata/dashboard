@@ -25,11 +25,11 @@ library(RPostgres)
 ```
 
 ```{r}
-HOST = "id-hdb-psgr-ct39.ethz.ch"
-PORT = 5432
-DBNAME = "openwashdata"
-user = ""
-password = ""
+HOST <- Sys.getenv("DB_HOST")
+PORT <- Sys.getenv("DB_PORT")
+DBNAME <- Sys.getenv("DB_NAME")
+user <- Sys.getenv("DB_USER")
+password <- Sys.getenv("DB_PASSWORD")
 con <- dbConnect(Postgres(), host = HOST, port = PORT, dbname = DBNAME, user = user, password = password)
 # Load datasets
 ds4owd_timeseries <- dbFetch(dbSendQuery(con, 'SELECT * FROM "ds4owd-001_timeseries_data";'))
