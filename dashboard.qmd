@@ -3,10 +3,10 @@ title: "dashboard"
 format: 
   dashboard:
     scrolling: true
+    css: style/dashboard.css
     theme:
       light: [litera, style/theme.scss]
     highlight-style: a11y-dark
-    css: styles.css
     code-copy: true
     code-overflow: wrap
     toc: true
