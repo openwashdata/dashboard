@@ -1,4 +1,4 @@
-name: Render and Deploy Quarto Dashboard
+name: Render Quarto Dashboard
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  render-and-deploy:
+  render-dashboard:
     runs-on: self-hosted
     permissions:
       contents: write
@@ -48,8 +48,10 @@ jobs:
         run: |
           quarto render dashboard.qmd --output-dir docs
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs
+      - name: Commit rendered files
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add docs
+          git commit -m "Render Quarto Dashboard" || echo "No changes to commit"
+          git push
