@@ -15,7 +15,7 @@ website:
   output-dir: docs
 ---
 
-# Website Analytics{scrolling="true"}
+# Website Analytics {scrolling="true"}
 
 **Data Science For Open Wash Data Website Analytics**
 
@@ -88,7 +88,6 @@ grouped_data <- group_data(ds4owd_timeseries, "Day")
 
 stats <- calculate_descriptive_stats(ds4owd_timeseries)
 ```
-
 
 ## Overview
 
@@ -205,11 +204,9 @@ country_plot <- ggplot(world_data) +
 ggplotly(country_plot)
 ```
 
-# Course Surveys{scrolling="true"}
+# Course Surveys {scrolling="true"}
 
 **Data Science For Open Wash Data Course Survey**
-
-
 
 ```{r}
 presurvey <- presurvey %>% mutate(prog_exp_r_num = case_when(
@@ -223,8 +220,8 @@ presurvey <- presurvey %>% mutate(prog_exp_r_num = case_when(
 avg_pre_r_comp <- mean(as.integer(presurvey$prog_exp_r_num), na.rm = TRUE)
 ```
 
+## Locations
 
-## Locations 
 ```{r}
 #| fig-width: 8
 #| fig-height: 6
@@ -258,6 +255,7 @@ ggplotly(country_plot)
 ```
 
 ## Overview Text
+
 What do they think of the course?
 
 ## Overview
@@ -333,13 +331,11 @@ list(
 )
 ```
 
-## Expectations - Title 
+## Expectations - Title
 
 How did Participants Benefit?
 
 ## Expectations
-
-
 
 ```{r}
 expectations <- postsurvey %>% 
@@ -357,7 +353,7 @@ expectations_table <- expectations %>%
   arrange(desc(count))
 ```
 
-### Column - Expectations{width=37.5%}
+### Column - Expectations {width="37.5%"}
 
 ```{r}
 #| fig-width: 5
@@ -377,8 +373,7 @@ expectation_plot <- ggplot(expectations_table, aes(x = reorder(expectations, cou
 expectation_plot
 ```
 
-### Column - Skill Evolution{width=37.5%}
-
+### Column - Skill Evolution {width="37.5%"}
 
 ```{r}
 #| fig-width: 5
@@ -407,7 +402,7 @@ r_comp_plot <- ggplot() +
 r_comp_plot
 ```
 
-### Column - Skill ratings{width=25%}
+### Column - Skill ratings {width="25%"}
 
 How did they feel after the course?
 
@@ -421,7 +416,6 @@ list(
   value = paste0(avg_r_comp, " / 4")
 )
 ```
-
 
 ```{r}
 #| content: valuebox
@@ -443,7 +437,8 @@ list(
   value = paste0(avg_conf_skill, " / 4")
 )
 ```
-# Posit Cloud{scrolling="true"}
+
+# Posit Cloud {scrolling="true"}
 
 ```{r}
 # Daily Compute Usage
@@ -454,7 +449,7 @@ positcloud_daily <- positcloud %>%
 positcloud_daily$from <- as.Date(positcloud_daily$from)
 ```
 
-As a part of the course, learners were introduced to Posit cloud to encourage open data sharing practices and provide a platform for sharing their work. 
+As a part of the course, learners were introduced to Posit cloud to encourage open data sharing practices and provide a platform for sharing their work.
 
 ## Overview
 
@@ -467,7 +462,6 @@ list(
   value = unique(positcloud$user_id) %>% length()
 )
 ```
-
 
 ```{r}
 #| content: valuebox
@@ -493,8 +487,7 @@ list(
 )
 ```
 
-
-## Daily Usage Plot 
+## Daily Usage Plot
 
 ```{r}
 #| fig-width: 5
