@@ -16,6 +16,14 @@ $valuebox-bg-primary: #511852;
 
 /*-- scss:rules --*/
 
+.dashboard-panel h2 {
+  background-color: #511852; // Change this to your desired color
+  color: white; // Set the text color for the title
+  padding: 10px; // Add padding for better appearance
+  border-top-left-radius: 5px; // Optional: rounded corners
+  border-top-right-radius: 5px; // Optional: rounded corners
+}
+
 
 .highlight-peach {
   background-color: #FEBC94;
