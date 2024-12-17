@@ -32,7 +32,7 @@ The aim of this website is to measure the impact of ds4owd and present collected
 
 # Website Analytics {scrolling="true"}
 
-### The ds4owd [website](https://ds4owd-001.github.io/website/) provides an overview of the course and access to all necessary resources Data generated from visits to the website is presented here.
+**The ds4owd [website](https://ds4owd-001.github.io/website/) provides an overview of the course and access to all necessary resources Data generated from visits to the website is presented here.***
 
 ```{r}
 library(tidyverse)
@@ -105,7 +105,8 @@ stats <- calculate_descriptive_stats(ds4owd_timeseries)
 ```
 
 ## Overview
-This presents the overall website activity at a glance.
+
+**This presents the overall website activity at a glance.**
 
 ```{r}
 #| content: valuebox
