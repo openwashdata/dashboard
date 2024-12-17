@@ -1,5 +1,5 @@
 ---
-title: "dashboard"
+title: "openwashdata analytics"
 format: 
   dashboard:
     scrolling: true
@@ -15,9 +15,26 @@ website:
   output-dir: docs
 ---
 
+# About {scrolling="true"}
+
+The data science for open wash data (ds4owd) course is held by the [openwashdata team](https://openwashdata.org/about) at the [Global Health Engineering Group](https://ghe.ethz.ch/) of [ETH Zurich](ethz.ch) 
+
+The aim of the course is empower WASH professionals to engage with tools and workflows for open data and code. This course is: 
+
+- free 
+- provides participants with a certificate for successful completion
+- using exclusively tools that are free and open source
+- offers 1:1 coding support between lectures and beyond the course
+
+You can find all details about this course and how to sign-up for it [here](https://ds4owd-001.github.io/website/)
+
+The aim of this website is to measure the impact of ds4owd and present collected data to encourage open data sharing practices.
+
 # Website Analytics {scrolling="true"}
 
-**Data Science For Open Wash Data Website Analytics**
+**The ds4owd [website](https://ds4owd-001.github.io/website/) provides an overview of the course and access to all necessary resources**
+
+Data generated from visits to the website is presented here. 
 
 ```{r}
 library(tidyverse)
@@ -90,6 +107,7 @@ stats <- calculate_descriptive_stats(ds4owd_timeseries)
 ```
 
 ## Overview
+This presents the overall website activity at a glance.
 
 ```{r}
 #| content: valuebox
@@ -132,17 +150,10 @@ list(
 
 ```
 
-```{r}
-#| content: valuebox
-#| title : "Bounce Rate (%)"
-list(
-  icon = "arrow-up-right",
-  color = "primary",
-  value = stats$bounce
-)
-```
 
 ## Website Activity
+
+The graph below showcases a time series of daily visits to the website along with the top sources. Direct visits are the most common source of traffic.
 
 ```{r}
 #| fig-width: 5 
