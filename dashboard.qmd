@@ -32,9 +32,7 @@ The aim of this website is to measure the impact of ds4owd and present collected
 
 # Website Analytics {scrolling="true"}
 
-**The ds4owd [website](https://ds4owd-001.github.io/website/) provides an overview of the course and access to all necessary resources**
-
-Data generated from visits to the website is presented here. 
+### The ds4owd [website](https://ds4owd-001.github.io/website/) provides an overview of the course and access to all necessary resources Data generated from visits to the website is presented here.
 
 ```{r}
 library(tidyverse)
@@ -153,7 +151,7 @@ list(
 
 ## Website Activity
 
-The graph below showcases a time series of daily visits to the website along with the top sources. Direct visits are the most common source of traffic.
+**The graph below showcases a time series of daily visits to the website along with the top sources. Direct visits are the most common source of traffic.**
 
 ```{r}
 #| fig-width: 5 
