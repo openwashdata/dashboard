@@ -29,6 +29,10 @@ jobs:
       - name: Install system dependencies
         run: |
           brew install gdal libxml2 tesseract geos
+          brew install pkg-config@0.29.2
+          brew unlink aws-sdk-cpp || true
+          brew install aws-c-common
+          brew link --overwrite aws-sdk-cpp || true
 
       - name: Install Quarto
         uses: quarto-dev/quarto-actions/setup@v2
