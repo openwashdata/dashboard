@@ -11,8 +11,14 @@ format:
     code-overflow: wrap
     toc: true
     mainfont: "Atkinson Hyperlegible"
+    # Fix for graph resizing
+    options:
+      height: auto
+      width: auto
 website:
   output-dir: docs
+execute:
+  freeze: auto  # Ensures outputs are cached for consistency
 ---
 
 # About {scrolling="true"}
@@ -44,6 +50,9 @@ library(rnaturalearthdata)
 library(jsonlite)
 library(showtext)
 library(RPostgres)
+library(wordcloud)
+library(tm)
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -61,6 +70,7 @@ postsurvey <- dbFetch(dbSendQuery(con, "SELECT * FROM postsurvey;"))
 presurvey <- dbFetch(dbSendQuery(con, "SELECT * FROM presurvey;"))
 locations <- dbFetch(dbSendQuery(con, "SELECT * FROM locations;"))
 positcloud <- dbFetch(dbSendQuery(con, 'SELECT * FROM "pscloud";'))
+metadata <- dbFetch(dbSendQuery(con, 'SELECT * FROM "publishing_metadata";' ))
 ```
 
 ```{r}
@@ -104,9 +114,11 @@ grouped_data <- group_data(ds4owd_timeseries, "Day")
 stats <- calculate_descriptive_stats(ds4owd_timeseries)
 ```
 
-## Overview
+## Overview Text
 
-## This presents the overall website activity at a glance.
+This presents the overall website activity at a glance.
+
+## Overview
 
 ```{r}
 #| content: valuebox
@@ -149,10 +161,11 @@ list(
 
 ```
 
+## Website Activity Text 
+
+The graph below showcases a time series of daily visits to the website along with the top sources. Direct visits are the most common source of traffic. 
 
 ## Website Activity
-
-## The graph below showcases a time series of daily visits to the website along with the top sources. Direct visits are the most common source of traffic. 
 
 ```{r}
 #| fig-width: 5 
@@ -181,6 +194,10 @@ sources_table <- ds4owd_source %>%
 sources_table
 ```
 
+## Visits by Country Text 
+
+Our visits come from around the world with a majority from Switzerland, Malawi, and the United States of America.
+
 ## Visits by Country
 
 ```{r}
@@ -202,7 +219,7 @@ world_data$visits[world_data$visits == 0] <- NA
 # Create the plot using ggplot
 country_plot <- ggplot(world_data) +
   geom_sf(aes(fill = visits)) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  scale_fill_gradient(low = "#C292C2", high = "#511852", na.value = "grey90") +
   labs(title = "",
        fill = "Visits") +
   theme_minimal() + 
@@ -211,7 +228,7 @@ country_plot <- ggplot(world_data) +
         axis.ticks = element_blank(),
         panel.grid = element_blank())
 
-ggplotly(country_plot)
+ggplotly(country_plot) |> layout(autosize = TRUE) # Fixes graph sizing issues when responsive graph doesn't fully load.
 ```
 
 # Course Surveys {scrolling="true"}
@@ -229,6 +246,10 @@ presurvey <- presurvey %>% mutate(prog_exp_r_num = case_when(
 
 avg_pre_r_comp <- mean(as.integer(presurvey$prog_exp_r_num), na.rm = TRUE)
 ```
+
+## Locations Text
+
+Course participants joined us from all over the globe! We had the most participants from Nigeria, Malawi, India, and the United States of America.
 
 ## Locations
 
@@ -252,7 +273,7 @@ world_data$participants[world_data$participants == 0] <- NA
 # Create the plot using ggplot
 country_plot <- ggplot(world_data) +
   geom_sf(aes(fill = participants)) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  scale_fill_gradient(low = "#C292C2", high = "#511852", na.value = "grey90") +
   labs(title = "",
        fill = "Participants") +
   theme_minimal() + 
@@ -261,12 +282,74 @@ country_plot <- ggplot(world_data) +
         axis.ticks = element_blank(),
         panel.grid = element_blank())
 
-ggplotly(country_plot)
+ggplotly(country_plot) |> layout(autosize = TRUE) # Fixes graph sizing issues when responsive graph doesn't fully load.
+```
+
+## Pre-Course Survey Text
+
+Participants' experience ranged from no experience to significant programming expertise, with most participants tending towards the former. 
+
+## Pre-Course Survey 
+
+### Programming Experience
+
+```{r}
+# Bar chart of the prog_exp column from presurvey
+
+# Mapping the original text to shorter versions
+short_labels <- c(
+  "I have none." = "No experience",
+  "I have written a few lines now and again." = "Written a few lines",
+  "I have written and maintained larger pieces of software." = "Maintained large code",
+  "I have written programs for my own use that are a couple of pages long." = "Written multi-page programs"
+)
+
+# Apply the mapping and convert to factors
+presurvey <- presurvey |> mutate(
+  prog_exp = factor(recode(prog_exp, !!!short_labels), # Recode using the !!! operator. This is used to unquote the list which is otherwise interpreted as one argument.
+                    levels = c("No experience", "Written a few lines", "Maintained large code", "Written multi-page programs")),
+  prog_exp_r = factor(recode(prog_exp_r, !!!short_labels), 
+                      levels = c("No experience", "Written a few lines", "Maintained large code", "Written multi-page programs"))
+)
+
+prog_exp_plot <- ggplot(presurvey, aes(x = prog_exp)) +
+  geom_bar(fill = "#511852", color = "black") +
+  theme_minimal() +
+  labs(title = "Experience in Programming", 
+       x = "", 
+       y = "") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank())
+
+ggplotly(prog_exp_plot) |> layout(autosize = TRUE)
+
+```
+
+### R Experience
+
+```{r}
+
+r_exp_plot <- ggplot(presurvey, aes(x = prog_exp_r)) +
+  geom_bar(fill = "#511852", color = "black") +
+  theme_minimal() +
+  labs(title = "Experience with R", 
+       x = "", 
+       y = "") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank())
+
+ggplotly(r_exp_plot) |> layout(autosize = TRUE)
+
 ```
 
 ## Overview Text
 
-What do they think of the course?
+What do they think of the course? 
+
+- Most participants completed the course and enjoyed it. 
+- There were some suggestions to improve the structure of the course. 
 
 ## Overview
 
@@ -341,80 +424,48 @@ list(
 )
 ```
 
-## Expectations - Title
+## Overview - Sentiment - Text
 
-How did Participants Benefit?
+What did they say about the course?
 
-## Expectations
+## Overview - Sentiment 
 
-```{r}
-expectations <- postsurvey %>% 
-  select(expectations) %>%
-  # change the values to No, Yes, Exceeded Expectations 
-  mutate(expectations = case_when(
-    expectations == "Yes, it met my expectations" ~ "Met Expectations",
-    expectations == "Yes, it exceeded my expectations" ~ "Exceeded Expectations",
-    TRUE ~ "Did not meet Expectations"
-  ))
-# Table of each expectation value and its count 
-expectations_table <- expectations %>% 
-  group_by(expectations) %>% 
-  summarise(count = n()) %>%
-  arrange(desc(count))
+```{r, fig.width=10, fig.height=4}
+
+comments <- postsurvey |> select(most_liked)
+corpus <- Corpus(VectorSource(comments))
+remove_words <- c("data", "just", "fact", "one", "coming", "room","using", "ive","canada", "verbs", "instead", "lars")
+
+corpus <- tm_map(corpus, content_transformer(tolower))  # Convert to lowercase
+corpus <- tm_map(corpus, removePunctuation)            # Remove punctuation
+corpus <- tm_map(corpus, removeNumbers)                # Remove numbers
+corpus <- tm_map(corpus, removeWords, stopwords("en")) # Remove common stopwords
+corpus <- tm_map(corpus,removeWords,remove_words)
+
+# Step 3: Create a term-document matrix
+tdm <- TermDocumentMatrix(corpus)
+tdm_matrix <- as.matrix(tdm)
+
+# Get word frequencies
+word_freq <- sort(rowSums(tdm_matrix), decreasing = TRUE)
+word_freq_df <- data.frame(word = names(word_freq), freq = word_freq)
+
+# Step 4: Generate the word cloud
+set.seed(1234)
+wordcloud(words = word_freq_df$word, 
+          freq = word_freq_df$freq, 
+          min.freq = 1, 
+          max.words = 30, 
+          random.order = FALSE, 
+          rot.per = 0.25, 
+          colors = brewer.pal(8, "Dark2"))
 ```
 
-### Column - Expectations {width="37.5%"}
+## Skill Ratings Text
 
-```{r}
-#| fig-width: 5
-#| fig-height: 3
-#| cap-location: "top"
-#| title: "Did the course meet expectations?"
+After the course, we asked participants to tell us how confident they were about applying the skills they gained
 
-# Create a bar plot of the expectations
-expectation_plot <- ggplot(expectations_table, aes(x = reorder(expectations, count, decreasing=TRUE), y = count)) +
-  geom_bar(stat = "identity", fill="white", color="black") +
-  labs(title = "", x = "", y = "") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) + 
-  ylim(0,max(expectations_table$count) + 3)
-
-# Convert to an interactive plot
-expectation_plot
-```
-
-### Column - Skill Evolution {width="37.5%"}
-
-```{r}
-#| fig-width: 5
-#| fig-height: 3
-#| cap-location: "top"
-#| title: "How did R programming skills evolve?" 
-
-# Line plot with two dots that goes from average pre-survey r competency to post rurvey r competency
-r_comp_plot <- ggplot() +
-  geom_point(aes(x = 1, y = avg_pre_r_comp), color = "blue", size = 3) +
-  geom_point(aes(x = 2, y = avg_r_comp), color = "red", size = 3) +
-  geom_line(aes(x = c(1, 2), y = c(avg_pre_r_comp, avg_r_comp)), color = "black") +
-  geom_segment(aes(x = 1.5, xend = 1.5, y = 1, yend = 4), linetype = "dashed", color = "gray") + 
-  geom_text(aes(x = 1, y = avg_pre_r_comp, label = round(avg_pre_r_comp, 1)), 
-            vjust = -1, color = "blue") +  # Label for before
-  geom_text(aes(x = 2, y = avg_r_comp, label = round(avg_r_comp, 1)), 
-            vjust = -1, color = "red") +  # Label for after
-  labs(title = "", x = "", y = "") +
-  theme_minimal() +
-  theme(axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        panel.grid = element_blank()) + 
-  ylim(1, 4)
-
-r_comp_plot
-```
-
-### Column - Skill ratings {width="25%"}
-
-How did they feel after the course?
+## Skill ratings
 
 ```{r}
 #| content: valuebox
@@ -455,11 +506,13 @@ list(
 positcloud_daily <- positcloud %>% 
   filter(active_projects > 0) %>%
   group_by (from) %>% 
-  summarise(mean_compute = mean(compute, na.rm = TRUE))
+  summarise(daily_compute = 2 * sum(compute, na.rm = TRUE)) # Compute is half of total hours of usage (default)
 positcloud_daily$from <- as.Date(positcloud_daily$from)
 ```
 
 As a part of the course, learners were introduced to Posit cloud to encourage open data sharing practices and provide a platform for sharing their work.
+
+The space proved to be extremely useful with over 200 active projects from 138 participants, removing barriers to barriers to usage.
 
 ## Overview
 
@@ -489,13 +542,17 @@ list(
 
 ```{r}
 #| content: valuebox
-#| title : "Total Compute Hours Logged"
+#| title : "Total Hours Spent Using the Space"
 list(
   icon = "clock",
   color = "primary",
-  value = round(sum(positcloud$compute),0)
+  value = round(sum(positcloud$compute * 2),0)
 )
 ```
+
+## Daily Usage Plot Text
+
+Daily usage spiked through the duration of the course, with up to 160 hours of usage per day. Since the end of the course, we see continued usage and the creation of new projects. 
 
 ## Daily Usage Plot
 
@@ -505,12 +562,132 @@ list(
 #| title: "Daily Posit Cloud Compute Usage (Hours)"
 #| cap-location: "top"
 
-positcloud_plot <- ggplot(positcloud_daily, aes(x = from, y = mean_compute, group=1)) +
+positcloud_plot <- ggplot(positcloud_daily, aes(x = from, y = daily_compute, group=1)) +
   geom_line() +
   labs(title = "", x = "", y = "") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 0, hjust = 1)) + 
-  ylim(0, max(positcloud_daily$mean_compute)+1) + 
+  ylim(0, max(positcloud_daily$daily_compute)+1) + 
   scale_x_date(date_labels = "%Y-%m", date_breaks = "3 months")
-ggplotly(positcloud_plot)
+ggplotly(positcloud_plot) |> layout(autosize = TRUE)
+```
+
+# Metadata {scrolling="true"}
+
+The openwashdata course led to the publication of datasets relating to WASH and SDGs. These datasets cover a wide variety of topics and were provided by course participants as a part of their final project. We publish these datasets in a standard format and provide open access to encourage open data practices. The datasets are published using the [washr package](https://cran.r-project.org/web/packages/washr/index.html) developed by the openwashdata team. The full list of datasets can be found [here](https://openwashdata.org/pages/gallery/data/)
+
+```{r}
+n_published <- metadata |> 
+  filter(status == "published") |> 
+  summarise(n_published = n()) |> 
+  pull(n_published)
+
+unique_maintainers_count <- metadata |> 
+  summarise(unique_maintainers = n_distinct(maintainer)) |> 
+  pull(unique_maintainers)
+
+unique_locations_count <- metadata |> 
+  mutate(location = if_else(location %in% c("Global", "Worldwide"), "Global", location)) |> 
+  summarise(unique_locations = n_distinct(location)) |> 
+  pull(unique_locations)
+
+```
+
+
+## Overview
+
+```{r}
+#| content: valuebox
+#| title : "Published Datasets"
+list(
+  icon = "database",
+  color = "primary",
+  value = n_published
+)
+```
+
+```{r}
+#| content: valuebox
+#| title : "Dataset maintainers"
+list(
+  icon = "person-heart",
+  color = "primary",
+  value = unique_maintainers_count
+)
+```
+
+```{r}
+#| content: valuebox
+#| title : "Number of unique locations covered"
+list(
+  icon = "globe",
+  color = "primary",
+  value = unique_locations_count
+)
+```
+
+## Plots Text
+
+Our data comes from various sources and presents varying levels of difficulty characterised by initial "tidyness" of data. To learn more about tidy data see vist: https://r4ds.had.co.nz/tidy-data.html. While this is a small sample, academically published data is easier to locate.
+
+## Plots Data Sources and Difficulty
+
+```{r, fig.width=8, fig.height=6}
+
+metadata <- metadata |> mutate(
+  source = ifelse(is.na(source), "others", source),
+  difficulty = ifelse(is.na(difficulty), "low", difficulty)
+)
+
+source_plot <- ggplot(metadata, aes(x = source, fill = difficulty)) +
+  geom_bar(position = "dodge", width = 0.7) +
+  labs(
+    title = "Data Sources and Difficulty",
+    x = "Source",
+    y = "",
+    fill = "Difficulty"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top",
+    plot.title = element_text(face = "bold", size = 16)
+  ) +
+  scale_fill_brewer(palette = "Set2")
+
+ggplotly(source_plot)
+
+```
+
+## Keywords Text
+
+Our datasets cover several topics, they're primarily related to WASH.
+
+## Keywords
+```{r, fig.width=8, fig.height=8}
+
+keyword_freq <- metadata |> 
+  mutate(keyword = strsplit(keywords, ",\\s*")) |> 
+  unnest(keyword) |> 
+  filter(!is.na(keyword)) |>
+  count(keyword, sort = TRUE) |>
+  top_n(10, n)
+
+keywords_plot <- ggplot(keyword_freq, aes(x = reorder(keyword, n), y = n)) +
+  geom_bar(stat = "identity", fill = "#511852", width = 0.7) +
+  labs(
+    title = "Top 10 Keywords",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(face = "bold", size = 16)
+  )
+
+ggplotly(keywords_plot) |> 
+  layout(autosize = TRUE, height = 600)
+
+
 ```
