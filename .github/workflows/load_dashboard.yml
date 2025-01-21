@@ -20,18 +20,21 @@ jobs:
 
       - name: Set up environment variables
         run: |
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
-          echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          cat <<EOF >> $GITHUB_ENV
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EOF
 
       - name: Install system dependencies
         run: |
+          brew update
           brew install gdal libxml2 tesseract geos
-          brew install pkg-config@0.29.2
+          brew install pkg-config@0.29.2 || brew upgrade pkg-config
           brew unlink aws-sdk-cpp || true
-          brew install aws-c-common
+          brew install aws-c-common || true
           brew link --overwrite aws-sdk-cpp || true
 
       - name: Install Quarto
@@ -39,7 +42,7 @@ jobs:
 
       - name: Install renv and restore environment
         run: |
-          Rscript -e 'install.packages("renv")'
+          Rscript -e 'install.packages("renv", repos = "https://cloud.r-project.org")'
           Rscript -e 'renv::restore()'
 
       - name: Render Quarto Dashboard
@@ -58,4 +61,4 @@ jobs:
           git config --global user.email 'action@github.com'
           git add docs
           git commit -m "Render Quarto Dashboard" || echo "No changes to commit"
-          git push
+          git push || echo "Push failed; ensure branch protection rules allow this"
