@@ -50,10 +50,11 @@ library(rnaturalearthdata)
 library(jsonlite)
 library(showtext)
 library(RPostgres)
-library(wordcloud)
+library(wordcloud) 
 library(tm)
 library(RColorBrewer)
-```
+
+``` 
 
 ```{r}
 HOST <- Sys.getenv("DB_HOST")
@@ -469,23 +470,23 @@ After the course, we asked participants to tell us how confident they were about
 
 ```{r}
 #| content: valuebox
-#| title: "Confidence in R skills"
+#| title: "Self-rated improvement in R skills"
 
 list(
   icon = "arrow-up-right-circle-fill",
   color = "info",
-  value = paste0(avg_r_comp, " / 4")
+  value = paste0(((avg_r_comp - 1.4) * 100) / 1.4, "%")
 )
 ```
 
 ```{r}
 #| content: valuebox
-#| title: "Confidence in Version Control"
+#| title: "Self-rated improvement in version control"
 
 list(
   icon = "arrow-up-right-circle-fill",
   color = "info",
-  value = paste0(avg_vc_comp, " / 4")
+  value = paste0(round(((avg_vc_comp - 1.2) * 100) / 1.2, 0), "%")
 )
 ```
 
@@ -628,7 +629,7 @@ list(
 
 ## Plots Text
 
-Our data comes from various sources and presents varying levels of difficulty characterised by initial "tidyness" of data. To learn more about tidy data see vist: https://r4ds.had.co.nz/tidy-data.html. While this is a small sample, academically published data is easier to locate.
+Our data comes from various sources and presents varying levels of difficulty characterised by initial "tidyness" of data. To learn more about tidy data visit: https://r4ds.had.co.nz/tidy-data.html. While this is a small sample, academically published data is easier to locate.
 
 ## Plots Data Sources and Difficulty
 
